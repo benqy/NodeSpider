@@ -1,0 +1,27 @@
+{
+  "name": "NodeSpider",
+  "version": "0.0.1",
+  "description": "NodeSpider ========== 采集程序,使用jquery选择器来筛选结果",
+  "main": "app.js",
+  "dependencies": {
+    "http-agent": "~0.1.2",
+    "jsdom": "~2.0.0",
+    "mongoskin": "~1.4.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/benqy/NodeSpider.git"
+  },
+  "keywords": [
+    "spider"
+  ],
+  "author": "hmjlr123@gmail.com",
+  "license": "WTFGL",
+  "bugs": {
+    "url": "https://github.com/benqy/NodeSpider/issues"
+  }
+}
