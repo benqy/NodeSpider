@@ -1,27 +1,33 @@
 {
   "name": "NodeSpider",
-  "version": "0.0.1",
-  "description": "NodeSpider ========== 采集程序,使用jquery选择器来筛选结果",
-  "main": "app.js",
+  "version": "0.1.0.0",
+  "description": "Spider using jquery selector",
+  "main": "app/index.html",
+  "author": "hmjlr123@gmail.com",
+  "license": "WTFPL",
+  "directories": {
+    "test": "no"
+  },
   "dependencies": {
-    "http-agent": "~0.1.2",
-    "jsdom": "~2.0.0",
-    "mongoskin": "~1.4.4"
+    "iconv-lite": "~0.2.11",
+    "http-proxy": "~0.10.3"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/benqy/NodeSpider.git"
+    "test": "no"
   },
   "keywords": [
-    "spider"
+    "adv"
   ],
-  "author": "hmjlr123@gmail.com",
-  "license": "WTFGL",
-  "bugs": {
-    "url": "https://github.com/benqy/NodeSpider/issues"
+  "window": {
+    "title": "NodeSpider",
+    "icon": "app/img/logo.png",
+    "toolbar": true,
+    "frame": false,
+    "width": 1200,
+    "height": 700,
+    "position": "center",
+    "min_width": 1200,
+    "min_height": 700
   }
 }
