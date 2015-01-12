@@ -1,7 +1,14 @@
 var dao = require('../app/modules/dao/movie.js'),
     urlModule = require('url'),
+    logDao = require('../app/modules/dao/log.js'),
+    regex = require('../app/helpers/regex.js'),
     _ = require('../app/helpers/underscore.js');
 
+//替换文本标签为:nsImg,防止自动下载图片
+var replaceImg = function(text){
+  text = text.replace(/<img/g,'<nsImg');
+  return text;
+};
 //母蜘蛛
 function Spider(config) {
 	var me = this;
@@ -14,9 +21,8 @@ function Spider(config) {
   this.urlGrab.init($);
   //数据采集器
   this.dataGrab = require('../app/modules/DataGrab/'+this.target +'.js');
-  
 	//页面内容抓取器，配置的文件名即为站点名。
-  this.agent = new HttpAgent(['http://www.2tu.cc/Html/GP19334.html']);
+  this.agent = new HttpAgent(config.pages || []);
   //抓下一个url
   this.agent.addListener('next', this.next.bind(this));
   //一个站点抓取完毕
@@ -34,32 +40,47 @@ Spider.prototype = {
       if(this.config.log) {
         require('../app/modules/log/log.js')(this);
       }
-      this.agent.emit('spiderStart');
-      this.agent.start();
-      //_self.savedGoods = data;
       //初始数据加载完成后运行抓取器
     }.bind(this));
+    
+    //跳过已访问过的地址
+    logDao.history(this.target,'visited', function(visited) {
+			this.agent._visited=visited;
+			logDao.history(this.target,'unvisited', function(unvisited) {
+				if(unvisited.length) {
+					//移除已访问的链接
+					unvisited = _.uniq(unvisited);
+					unvisited= _.difference(unvisited,this.agent._visited);
+					this.agent._unvisited = unvisited;
+				}
+        this.agent.emit('spiderStart');
+        this.agent.start();
+			}.bind(this));
+		}.bind(this));
+    
 	},
   next:function(err,res) {
-    var me = this,agent,html,urls,movieInfo;
-    agent = this.agent
+    var me = this,agent = this.agent,html,urls,movieInfo;
     if(res.error){
       agent.emit('error',res);
-      agent.next();
+      setTimeout(function(){
+        agent.next();      
+      },3000);
       return;
     }
-    html = $(res.html);
-    agent.emit('loadComplate',res.url);
+    html = $(replaceImg(res.html));
+    agent.emit('visited',res.url,this.target);
     urls = this.urlGrab.grab(html,this.target,this.config.filters,this.config.accapts);
+    urls = urls.map(function(url){
+      return urlModule.resolve('http://' + me.target,url);
+    });
     urls =_.uniq(urls);
     //去重后将url添加到待抓取列表
     var toAddUrls = _.difference(urls,agent._visited);
 		toAddUrls = _.difference(toAddUrls,agent._unvisited);
-    toAddUrls = toAddUrls.map(function(url){
-      return urlModule.resolve('http://' + me.target,url);
-    });
 		agent.addUrl(toAddUrls);
     agent.emit('addUrl',toAddUrls,agent._unvisited.length,this.target);
+    //采集电影信息
     movieInfo = this.dataGrab.grapMovie(html,$,res.url);
     if(movieInfo && movieInfo.id){
       this.save(movieInfo);
@@ -68,19 +89,9 @@ Spider.prototype = {
     else{
       agent.emit('unuseful',res.url);
     }
-		agent.next();
-		/*
-		if(_good) {
-			_good.website = uri;
-			this.collection= _good.collection;
-			_self.save(_good);
-			_good = null;
-			agent.emit('useful',_self.target,uri);
-		} else {
-			//agent.emit('unuseful',agent.current.uri);
-		}
-		agent.emit('visited',uri,_self.target);
-		agent.next();*/
+    setTimeout(function(){
+			agent.next();
+    },1000);
 	},
 	save: function(data) {
 		var me = this;
@@ -93,30 +104,40 @@ Spider.prototype = {
 				break;
 			}
 		}
-		dao.saveOrUpdate(data,_id, function() {
-      this.movies.push({
-        id:data.key,
-        _id:data._id
-      });
-      _id = data._id;
-      this.agent.emit('saved',_id);
-			//抓取图片TODO图片的存储逻辑有点混乱？
-			/*grabImage.grabImage(data,_id, function(imgFullName) {
-				_self.agent.emit('savedImage',imgFullName);
-			});*/
-		}.bind(this));
+    if(!_id) {
+      dao.saveOrUpdate(data,_id, function() {
+        this.movies.push({
+          id:data.key,
+          _id:data._id
+        });
+        _id = data._id;
+        this.agent.emit('saved',_id);
+      }.bind(this));
+    }
+    else{
+      this.agent.emit('update',_id);
+    }
 	}
 };
 
 var config = {
   targets:['www.2tu.cc'],//抓取站点
+  pages:[],
   accapts:[
     '.html'
   ],
   filters:[
   ],//无效链接过滤关键字
-  
   log:true,//是否使用日记
   norepeat:false//每次运行是否重新抓取已访问过的网站（true即为断点续抓，一般只有调试才设为false）
 };
+/*var init2tuUrls = function(){
+  var urls =[];
+  for(var i = 1;i <= 20129;i++){
+    urls.push({ url : 'http://www.2tu.cc/Html/GP'+i+'.html' });
+  }
+  logDao.save('www.2tu.cc.unvisited',urls,function(){});
+};
+init2tuUrls();*/
+//20129
 new Spider(config);

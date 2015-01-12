@@ -4,6 +4,7 @@ module.exports = {
 	jsfile:/\.js/,
 	anchor:/#\w*/,
 	firstSlash:/^\//,
+  imgTag:/<(img).*?(?:>|\/>)/gi,
 	notint:/\D/,//非数字
 	notNumber:/[^0-9\.]/, //非数字，但包括小数点
 	getUrlArr: function(url) {//取url数组，依次为：协议，域名，路径，文件名

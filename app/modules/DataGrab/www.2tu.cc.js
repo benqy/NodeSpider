@@ -16,19 +16,19 @@ module.exports = {
       data = {url:url};
     	data.id = idCatchs[1];
       data.catalog = [];
-      var wzContents = html.find('.wz').contents()
+      var wzContents = html.find('.wz').contents();
       wzContents.each(function(i,n){
         if(i>2){
           var cataName = $(n).text().replace('»','').trim();
           if(cataName){
             data.catalog.push(cataName);
             if(i == wzContents.length-1){
-              data.name = cataName;
+              data.name = cataName.split('/');
             }
           }
         }
       });
-      data.tu2Pic = html.find('.pic img').attr('src');
+      data.tu2Pic = html.find('.pic nsimg').attr('src');
       data.seoName = html.find('.info h1').text();
       var infoLis = html.find('.info ul li');
       data.age = infoLis.eq(0).contents().eq(1).text();
